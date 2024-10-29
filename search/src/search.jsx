@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const SearchPage = () => {
+const search = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [results, setResults] = useState([]);
@@ -11,14 +11,20 @@ const SearchPage = () => {
   const [therapyType, setTherapyType] = useState('');
 
   const queryParams = new URLSearchParams(location.search);
-  const searchTerm = queryParams.get('searchTerm') || '';
+  const services = queryParams.get('services') || '';
   const address = queryParams.get('address') || '';
 
   useEffect(() => {
     const fetchProviders = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`http://localhost:4004/providers?searchTerm=${searchTerm}&address=${address}&therapyType=${therapyType}`);
+        const response = await axios.get(`http://localhost:4004/providers`, {
+          params: {
+            services,
+            address,
+            therapyType,
+          },
+        });
         setResults(response.data);
       } catch (error) {
         console.error('Error fetching providers:', error.response || error.message);
@@ -29,7 +35,7 @@ const SearchPage = () => {
     };
 
     fetchProviders();
-  }, [searchTerm, address, therapyType]);
+  }, [services, address, therapyType]); 
 
   const TherapyTypeChange = (event) => {
     const selectedTherapyType = event.target.value;
@@ -50,7 +56,8 @@ const SearchPage = () => {
           id="therapyType"
           value={therapyType}
           onChange={TherapyTypeChange}
-          className="border p-2" >
+          className="border p-2"
+        >
           <option value="">All</option>
           <option value="In-Clinic">In-Clinic</option>
           <option value="In-Home">In-Home</option>
@@ -58,25 +65,24 @@ const SearchPage = () => {
         </select>
       </div>
 
-        <table className='min-w-full border border-gray-300'>
-          <thead>
-            <tr>
-              <th className='border px-4 py-2'>Provider Name</th>
-              <th className='border px-4 py-2'>Address</th>
-              <th className='border px-4 py-2'>Therapy Type</th>
+      <table className='min-w-full border border-gray-300'>
+        <thead>
+          <tr>
+            <th className='border px-4 py-2'>Provider Name</th>
+            <th className='border px-4 py-2'>Address</th>
+            <th className='border px-4 py-2'>Therapy Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {results.map((provider) => (
+            <tr key={provider.id}>
+              <td className='border px-4 py-2'>{provider.name}</td>
+              <td className='border px-4 py-2'>{provider.address}</td>
+              <td className='border px-4 py-2'>{provider.therapyType}</td>
             </tr>
-          </thead>
-          <tbody>
-            {results.map((provider, index) => (
-              <tr key={index}>
-                <td className='border px-4 py-2'>{provider.name}</td>
-                <td className='border px-4 py-2'>{provider.address}</td>
-                <td className='border px-4 py-2'>{provider.therapyType}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      
+          ))}
+        </tbody>
+      </table>
 
       {!loading && !error && results.length === 0 && (
         <p>No providers found for the given search criteria.</p>
@@ -85,4 +91,4 @@ const SearchPage = () => {
   );
 };
 
-export default SearchPage;
+export default search;
